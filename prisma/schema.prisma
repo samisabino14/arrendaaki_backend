@@ -1,0 +1,222 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Province {
+  pkProvince String @id @default(uuid())
+
+  designation String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Countys County[]
+
+  @@map("province")
+}
+
+model County {
+  pkCounty String @id @default(uuid())
+
+  designation String
+
+  Province   Province? @relation(fields: [fkProvince], references: [pkProvince])
+  fkProvince String?
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+  Districts District[]
+
+  @@map("county")
+}
+
+model District {
+  pkDistrict String @id @default(uuid())
+
+  designation String
+
+  County   County? @relation(fields: [fkCounty], references: [pkCounty])
+  fkCounty String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Localities Locality[]
+
+  @@map("district")
+}
+
+model Locality {
+  pkLocality String @id @default(uuid())
+
+  District   District? @relation(fields: [fkDistrict], references: [pkDistrict])
+  fkDistrict String?
+
+  neighborhood String
+  road         String
+  houseNumber  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Persons    Person[]
+  Residences Residence[]
+
+  @@map("locality")
+}
+
+model Person {
+  pkPerson           String @id @default(uuid())
+  fullName           String
+  identifyCardNumber String
+  phoneNumber        String
+  birthDate          String
+
+  Locality   Locality? @relation(fields: [fkLocality], references: [pkLocality])
+  fkLocality String?
+
+  Residences Residence[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Account Account?
+
+  @@map("persons")
+}
+
+model TypeOfAccount {
+  pkTypeOfAccount String @id @default(uuid())
+  designation     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  AccountTypeOfAccount AccountTypeOfAccount[]
+
+  @@map("typeofaccount")
+}
+
+model Account {
+  pkAccount String @id @default(uuid())
+  email     String
+  password  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Person   Person @relation(fields: [fkPerson], references: [pkPerson])
+  fkPerson String @unique
+
+  Contracts            Contract[]
+  AccountTypeOfAccount AccountTypeOfAccount[]
+
+  @@map("accounts")
+}
+
+model AccountTypeOfAccount {
+  pkAccountTypeOfAccount String @id @default(uuid())
+
+  Account   Account @relation(fields: [fkAccount], references: [pkAccount])
+  fkAccount String
+
+  TypeOfAccount   TypeOfAccount @relation(fields: [fkTypeOfAccount], references: [pkTypeOfAccount])
+  fkTypeOfAccount String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@map("accounttypeofaccount")
+}
+
+model Typology {
+  pkTypology  String @id @default(uuid())
+  designation String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Residences Residence[]
+
+  @@map("typology")
+}
+
+model Residence {
+  pkResidence   String @id @default(uuid())
+  address       String
+  pricePerMonth String
+  iban          String
+
+  isFurnished Boolean @default(false)
+  approved    Boolean @default(false)
+
+  Owner   Person @relation(fields: [fkOwner], references: [pkPerson])
+  fkOwner String
+  
+  Locality   Locality @relation(fields: [fkLocality], references: [pkLocality])
+  fkLocality String
+
+  Typology   Typology @relation(fields: [fkTypology], references: [pkTypology])
+  fkTypology String
+
+  //busy Boolean @default(false)
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+
+  Photos    Photo[]
+  Contracts Contract[]
+
+  @@map("residences")
+}
+
+model Photo {
+  pkPhoto     String @id @default(uuid())
+  designation String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Residence   Residence @relation(fields: [fkResidence], references: [pkResidence])
+  fkResidence String
+
+  @@map("photos")
+}
+
+model TypeOfContract {
+  pkTypeOfContract String @id @default(uuid())
+  designation      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  Contracts Contract[]
+
+  @@map("typeofcontract")
+}
+
+model Contract {
+  pkContract String @id @default(uuid())
+
+  TypeOfContract   TypeOfContract @relation(fields: [fkTypeOfContract], references: [pkTypeOfContract])
+  fkTypeOfContract String
+
+  Residence   Residence @relation(fields: [fkResidence], references: [pkResidence])
+  fkResidence String
+
+  Account  Account @relation(fields: [fkClient], references: [pkAccount])
+  fkClient String
+
+  startsAt DateTime
+  endsAt   DateTime
+
+  @@map("contracts")
+}
